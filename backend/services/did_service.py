@@ -7,7 +7,8 @@ from fastapi import HTTPException
 class DIDService:
     def __init__(self):
         self.base_url = "https://api.d-id.com"
-        self.api_key = os.getenv("DID_KEY")
+        # Strip whitespace/newlines to avoid invalid header bytes
+        self.api_key = os.getenv("DID_KEY", "").strip()
         if not self.api_key:
             raise RuntimeError("DID_KEY not found in environment variables")
         self.auth_header = (
