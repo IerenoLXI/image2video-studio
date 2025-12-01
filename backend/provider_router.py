@@ -23,6 +23,9 @@ router = APIRouter(prefix="/api", tags=["image2video"])
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Base URL used when constructing links to uploaded files
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/")
+
 # Initialize services (will raise RuntimeError if API keys are missing)
 # This is intentional - services should be configured before use
 try:
@@ -126,7 +129,7 @@ async def upload_image(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
     
     # Return URL (relative path that will be served)
-    image_url = f"http://localhost:8000/api/uploads/{unique_filename}"
+    image_url = f"{PUBLIC_BASE_URL}/api/uploads/{unique_filename}"
     return {"image_url": image_url, "filename": unique_filename}
 
 

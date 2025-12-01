@@ -22,6 +22,7 @@ In the Render service dashboard, add these environment variables under **Setting
 - `A2E_TOKEN`
 - `DID_KEY`
 - `HEYGEN_KEY`
+- `PUBLIC_BASE_URL` → set to `https://your-service.onrender.com`
 
 If you have a local `.env`, copy the same values. Render will restart automatically when you update them.
 
