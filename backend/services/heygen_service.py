@@ -1,13 +1,21 @@
 import os
 from typing import Dict
+
 import httpx
 from fastapi import HTTPException
+
+HEYGEN_KEY = (os.getenv("HEYGEN_KEY") or "").strip()
+
+HEADERS = {
+    "Authorization": f"Bearer {HEYGEN_KEY}",
+    "Content-Type": "application/json",
+}
 
 
 class HeyGenService:
     def __init__(self):
         self.base_url = "https://api.heygen.com"
-        self.api_key = os.getenv("HEYGEN_KEY")
+        self.api_key = HEYGEN_KEY
         if not self.api_key:
             raise RuntimeError("HEYGEN_KEY not found in environment variables")
 
@@ -17,10 +25,7 @@ class HeyGenService:
         HeyGen uses image_url and text for video generation.
         """
         url = f"{self.base_url}/v1/video/talking"
-        headers = {
-            "X-Api-Key": self.api_key,
-            "Content-Type": "application/json"
-        }
+        headers = HEADERS.copy()
         
         body = {
             "image_url": image_url,
@@ -50,7 +55,7 @@ class HeyGenService:
     async def get_status(self, task_id: str) -> Dict:
         """Get status of HeyGen video generation task."""
         url = f"{self.base_url}/v1/video/task/{task_id}"
-        headers = {"X-Api-Key": self.api_key}
+        headers = {"Authorization": HEADERS["Authorization"]}
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.get(url, headers=headers)
