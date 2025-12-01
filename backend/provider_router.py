@@ -1,9 +1,9 @@
 import os
 import uuid
 from typing import Dict, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File
+
+from fastapi import APIRouter, HTTPException, UploadFile, File, Request
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from services.a2e_service import A2EService
@@ -22,9 +22,6 @@ router = APIRouter(prefix="/api", tags=["image2video"])
 # Create uploads directory if it doesn't exist (relative to backend directory)
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# Base URL used when constructing links to uploaded files
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/")
 
 # Initialize services (will raise RuntimeError if API keys are missing)
 # This is intentional - services should be configured before use
@@ -104,12 +101,13 @@ async def start_image2video(request: StartRequest):
 
 
 @router.post("/upload-image")
-async def upload_image(file: UploadFile = File(...)):
+@router.post("/upload")
+async def upload_image(request: Request, file: UploadFile = File(...)):
     """
     Upload an image file and get a URL to use for video generation.
     
     Returns:
-    - image_url: URL that can be used in /start-image2video
+    - url: HTTPS URL that can be used in /start-image2video
     """
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -128,9 +126,10 @@ async def upload_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
     
-    # Return URL (relative path that will be served)
-    image_url = f"{PUBLIC_BASE_URL}/api/uploads/{unique_filename}"
-    return {"image_url": image_url, "filename": unique_filename}
+    base_url = str(request.base_url).rstrip("/")
+    file_url = f"{base_url}/api/uploads/{unique_filename}"
+    
+    return {"url": file_url, "filename": unique_filename}
 
 
 @router.get("/uploads/{filename}")

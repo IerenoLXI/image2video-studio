@@ -112,8 +112,14 @@ function App() {
       }
 
       const data = await response.json()
-      setImageUrl(data.image_url)
-      return data.image_url
+      const uploadedUrl = data.url || data.image_url
+
+      if (!uploadedUrl) {
+        throw new Error('Upload succeeded but no URL was returned from the server')
+      }
+
+      setImageUrl(uploadedUrl)
+      return uploadedUrl
     } catch (error) {
       let errorMessage = error.message || 'An unexpected error occurred'
       
@@ -121,7 +127,7 @@ function App() {
       if (errorMessage.includes('must be an image')) {
         errorMessage = 'Please select a valid image file (JPG, PNG, etc.)'
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        errorMessage = 'Network error: Could not connect to the server. Make sure the backend is running.'
+        errorMessage = `Network error: Could not connect to the server. Make sure the backend is running at ${API_BASE}.`
       }
       
       alert(`Upload error: ${errorMessage}`)
@@ -197,7 +203,7 @@ function App() {
       } else if (errorMessage.includes('API error')) {
         errorMessage = `Provider API error: ${errorMessage}. Please check your API key and try again.`
       } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        errorMessage = 'Network error: Could not connect to the server. Make sure the backend is running on port 8000.'
+        errorMessage = `Network error: Could not connect to the server. Make sure the backend is running at ${API_BASE}.`
       }
       
       alert(`Error: ${errorMessage}`)
