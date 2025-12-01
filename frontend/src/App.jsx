@@ -338,6 +338,24 @@ function App() {
     }
   }, [])
 
+  // Warn before leaving while a job is running
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const blockUnload =
+      loading ||
+      polling ||
+      (taskId && status && status !== 'completed' && status !== 'failed')
+
+    const handleBeforeUnload = (event) => {
+      if (!blockUnload) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [loading, polling, taskId, status])
+
   return (
     <div className="app">
       <div className="container">
