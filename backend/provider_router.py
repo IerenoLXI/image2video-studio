@@ -17,6 +17,11 @@ class StartRequest(BaseModel):
     text: str
 
 
+class HeyGenTestRequest(BaseModel):
+    image_url: str
+    text: str
+
+
 router = APIRouter(prefix="/api", tags=["image2video"])
 
 # Create uploads directory if it doesn't exist (relative to backend directory)
@@ -163,4 +168,25 @@ async def get_status(provider: str, task_id: str):
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting status: {str(e)}")
+
+
+@router.post("/heygen/test-call")
+async def heygen_test_call(payload: HeyGenTestRequest):
+    """
+    Diagnostic helper to verify the exact HeyGen endpoint and status code being used.
+    """
+    if heygen_service is None:
+        raise HTTPException(
+            status_code=500,
+            detail="HeyGen service is not configured. Please set HEYGEN_KEY in .env",
+        )
+
+    try:
+        return await heygen_service.debug_generate(payload.image_url, payload.text)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail=f"Error testing HeyGen integration: {str(exc)}"
+        )
 
